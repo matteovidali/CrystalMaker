@@ -9,13 +9,38 @@ import random
 from datetime import datetime
 
 SEED = 0 
+NUM_PARTICLES = 5
 
-class Coordinate:
+class Vector:
     def __init__(self, x:float, y:float, z:float):
         self.x = x
         self.y = y
         self.z = z
+
+    def __add__(self, v):
+        return Vector(self.x+v.x, self.y+v.y, self.z+v.z)
+
+    def __pow__(self, num):
+        return Vector(self.x**num, self.y**num, self.z**num)
     
+    def __truediv__(self, other):
+        return Vector(self.x/other.x, self.y/other.y, self.z/other.z)
+
+    def __mod__(self, num):
+        return Vector(self.x%num, self.y%num, self.z%num)
+
+    def get(self, coord):
+        if coord=='x':
+            return self.x
+        if coord=='y': 
+            return self.y
+        if coord=='z':
+            return self.z
+        return None
+    
+    def dist(self, v):
+        return sqrt((self.x - v.x)**2 + (self.y - v.y)**2 + (self.z - v.z)**2)
+
     def update_uniform(self, step, mod=0):
         self.x += step
         self.y += step
@@ -27,70 +52,91 @@ class Coordinate:
             self.z %= mod
 
 class Particle:
-    def __init__(self, radius, polarity):
+    def __init__(self, radius, polarity, maxV=0.05):
         global SEED
         random.seed(SEED)
         SEED += random.randint(0,1000)
         self.radius = radius
         self.polarity=polarity
+        self.position = Vector(random.randint(0,10),random.randint(0,10),random.randint(0,10))
+        self.x = self.position.get('x') 
+        self.y = self.position.get('y')
+        self.z = self.position.get('z')
 
-        self.position = Coordinate(random.randint(0,10),random.randint(0,10),random.randint(0,10))
-        self.x = self.position.x
+        self.velocity = Vector(random.uniform(-maxV,maxV),random.uniform(-maxV,maxV), random.uniform(-maxV,maxV))
+
+    def update_locals(self):
+        self.x = self.position.x 
         self.y = self.position.y
-        self.z = self.position.z
-
-        self.velocity = [0, 0, 0]
+        self.z = self.position.z    
     
-    def compute_distance_to_point(self, point:Coordinate):
-        return sqrt((self.x - point.x)**2 + (self.y - point.y)**2 + (self.z - point.z)**2)
 
-    def update_position(self, val):
-        print(self.x, self.y, self.z)
+    def compute_distance_to_point(self, point:Vector):
+        return self.position.dist(point)
+
+
+    def update_position_by_value(self, val):
         self.position.update_uniform(val, 10)
         self.x = self.position.x
         self.y = self.position.y
         self.z = self.position.z
         return self.position
 
+    def update_position(self):
+        self.position = (self.position + self.velocity) % 10
+        self.update_locals()
 
-        
+    def update_velocity(self, force:Vector):
+        self.velocity = (self.velocity+force)%1
+        self.update_locals()
     
 
+def calculate_forces(particles):
+    pForces=[Vector(0,0,0)]*len(particles)
+    for idx, p in enumerate(particles):
+        for idj, j in enumerate(particles[1:]):
+            distance = p.compute_distance_to_point(j.position)**2
+            invSqr = 1/distance if distance else 0
+            pForces[idx] += Vector(invSqr, invSqr, invSqr)
+        pForces[idx]/Vector(idj,idj,idj)
+
+    print(pForces)
+    return pForces
+    
 def animate(value):
-    for p in particles:
-        p.update_position(0.05)
+    force = calculate_forces(particles)
+    for idx, p in enumerate(particles):
+        p.update_position()
+        p.update_velocity(force[idx])
 
     graph._offsets3d = ([p.x for p in particles], [p.y for p in particles],[p.z for p in particles])
 
 
 colors = ['red', 'blue']
-particles = [Particle(1,1) for _ in range(0,5)]
-print(type(particles[0].x))
+sizes = [5,35]
+particles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
 
 x = [p.x for p in particles]
 y = [p.y for p in particles]
 z = [p.z for p in particles]
 
-so = [5,35,5,35,5]
-co = [colors[c%2] for c in range(len(x))]
-
-
+# size based on particles radius
+so = [p.radius for p in particles]
+# colors based on particles radius
+co = [colors[0] if particles[c].radius==5 else colors[1] for c in range(len(x))]
 
 
 fig = plt.figure()
 ax = plt.axes(projection = "3d")
 ax.set_xlim3d([0.0, 10])
 ax.set_xlabel('X')
-
 ax.set_ylim3d([0.0,10])
 ax.set_ylabel('Y')
-
 ax.set_zlim3d([0.0, 10])
 ax.set_zlabel('Z')
-
-ax.set_title('3D Test')
+ax.set_title('Crystal Generation')
 graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=so,c=co)
 
-anim = animation.FuncAnimation(fig, animate, frames=30, interval=5, repeat=True)
+anim = animation.FuncAnimation(fig, animate, frames=30, interval=500, repeat=True)
 plt.show()
 
