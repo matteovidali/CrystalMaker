@@ -1,5 +1,3 @@
-from errno import WSAEDQUOT
-from tkinter import W
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,50 +5,13 @@ from matplotlib import animation
 from math import sqrt
 import random
 from datetime import datetime
+from Vector import Vector
 
+# Seed is the global random seed value
 SEED = 0 
 NUM_PARTICLES = 5
 
-class Vector:
-    def __init__(self, x:float, y:float, z:float):
-        self.x = x
-        self.y = y
-        self.z = z
-
-    def __add__(self, v):
-        return Vector(self.x+v.x, self.y+v.y, self.z+v.z)
-
-    def __pow__(self, num):
-        return Vector(self.x**num, self.y**num, self.z**num)
-    
-    def __truediv__(self, other):
-        return Vector(self.x/other.x, self.y/other.y, self.z/other.z)
-
-    def __mod__(self, num):
-        return Vector(self.x%num, self.y%num, self.z%num)
-
-    def get(self, coord):
-        if coord=='x':
-            return self.x
-        if coord=='y': 
-            return self.y
-        if coord=='z':
-            return self.z
-        return None
-    
-    def dist(self, v):
-        return sqrt((self.x - v.x)**2 + (self.y - v.y)**2 + (self.z - v.z)**2)
-
-    def update_uniform(self, step, mod=0):
-        self.x += step
-        self.y += step
-        self.z += step
-
-        if mod:
-            self.x %= mod 
-            self.y %= mod
-            self.z %= mod
-
+# Particle class for a particle simulator ... duh
 class Particle:
     def __init__(self, radius, polarity, maxV=0.05):
         global SEED
@@ -103,6 +64,7 @@ def calculate_forces(particles):
     print(pForces)
     return pForces
     
+# This is my cursed draw loop atm...
 def animate(value):
     force = calculate_forces(particles)
     for idx, p in enumerate(particles):
