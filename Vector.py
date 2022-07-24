@@ -21,6 +21,9 @@ class Vector:
     # Modular Overloading
     def __mod__(self, num):
         return Vector(self.x%num, self.y%num, self.z%num)
+    
+    def __mul__(self, other):
+        return Vector(self.x*other.x, self.y*other.y, self.z*other.z)
 
     # Helper Function (not strictly necessary)
     def get(self, coord):
@@ -46,3 +49,6 @@ class Vector:
             self.x %= mod 
             self.y %= mod
             self.z %= mod
+    
+    def magnitude(self):
+        return sqrt(self.x**2 + self.y**2 + self.z**2)
