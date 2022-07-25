@@ -96,8 +96,6 @@ def calculate_forces(particles, attractionConst=.2):
             if idx == idj or p.position.dist(j.position)==0:
                 continue
             distance = p.compute_distance_to_point(j.position)
-            if distance < j.radius + p.radius:
-                print("COLLISION")
             invSqr = 1/distance if distance > .5*p.radius else 0
             dVec=sMult(p.position.norm_direction_to(j.position),invSqr)
             pForces[idx]+=sMult(dVec, 2 if j.radius == 35 else 1)
