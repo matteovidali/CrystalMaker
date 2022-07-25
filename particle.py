@@ -9,7 +9,17 @@ from Vector import Vector
 
 # Seed is the global random seed value
 SEED = 0 
-NUM_PARTICLES = 5
+NUM_PARTICLES = 2 
+DT = 0.001
+STEPS = 2000000
+
+#Vector Functions:
+def sMult(v1:Vector, num:float):
+    return Vector(v1.x*num, v1.y*num, v1.z*num)
+
+def vComp(v1:Vector, v2:Vector):
+    s = v1-v2
+    return True if s.magnitude == 0 else False
 
 # Particle class for a particle simulator ... duh
 class Particle:
@@ -27,7 +37,7 @@ class Particle:
         self.y = self.position.get('y')
         self.z = self.position.get('z')
 
-        self.velocity = Vector(random.uniform(0,1), random.uniform(0,1), random.uniform(0,1))
+        self.velocity = Vector(random.uniform(0,.5), random.uniform(0,.5), random.uniform(0,.5))
         self.limits = (0,10)
 
         self.multiplier = Vector(1,1,1)
@@ -58,61 +68,73 @@ class Particle:
     # Lets fix this reflection scheme at some point
     def update_position(self):
         
-        testMin= Vector(np.sign(min(self.limits) - self.position.x), 
-                        np.sign(min(self.limits) - self.position.y), 
-                        np.sign(min(self.limits) - self.position.z))
-
-        testMax= Vector(np.sign(max(self.limits) - self.position.x), 
-                        np.sign(max(self.limits) - self.position.y), 
-                        np.sign(max(self.limits) - self.position.z))
-
-        #NotQuite
-        if any([self.position.x, self.position.y, self.position.z]) < min(self.limits):
-            self.multiplier = testMin
-        elif any([self.position.x, self.position.y, self.position.z]) < max(self.limits):
-            self.multiplier = testMax
+#        testMin= Vector(np.sign(min(self.limits) - self.position.x), 
+#                        np.sign(min(self.limits) - self.position.y), 
+#                        np.sign(min(self.limits) - self.position.z))
 #
-#       if self.position.x <= min(self.limits):
-#           self.position = Vector(min(self.limits), self.position.y, self.position.z)
-#           self.multiplier *= Vector(-1,1,1)
-#       elif self.position.x >= max(self.limits):
-#           self.position = Vector(max(self.limits), self.position.y, self.position.z)
-#           self.multiplier *= Vector(-1, 1, 1)
-#       
-#       if self.position.y <= min(self.limits):
-#           self.position = Vector(self.position.x, min(self.limits), self.position.z)
-#           self.multiplier *= Vector(1,-1,1)
-#       elif self.position.y >= max(self.limits):
-#           self.position = Vector(self.position.x, max(self.limits), self.position.z)
-#           self.multiplier *= Vector(1, -1, 1)
-#      
-#       if self.position.z <= min(self.limits):
-#           self.position = Vector(self.position.x, self.position.y, min(self.limits))
-#           self.multiplier *= Vector(1,1,-1)
-#       elif self.position.z >= max(self.limits):
-#           self.position = Vector(self.position.x, self.position.y, max(self.limits))
-#           self.multiplier *= Vector(1, 1, -1)
+#        testMax= Vector(np.sign(max(self.limits) - self.position.x), 
+#                        np.sign(max(self.limits) - self.position.y), 
+#                        np.sign(max(self.limits) - self.position.z))
+#
+#        #NotQuite
+#        if any([self.position.x, self.position.y, self.position.z]) < min(self.limits):
+#            self.multiplier = testMin
+#        elif any([self.position.x, self.position.y, self.position.z]) < max(self.limits):
+#            self.multiplier = testMax
+
+        if self.position.x <= min(self.limits):
+            self.position = Vector(min(self.limits), self.position.y, self.position.z)
+            self.multiplier *= Vector(-1,1,1)
+        elif self.position.x >= max(self.limits):
+            self.position = Vector(max(self.limits), self.position.y, self.position.z)
+            self.multiplier *= Vector(-1, 1, 1)
+        
+        if self.position.y <= min(self.limits):
+            self.position = Vector(self.position.x, min(self.limits), self.position.z)
+            self.multiplier *= Vector(1,-1,1)
+        elif self.position.y >= max(self.limits):
+            self.position = Vector(self.position.x, max(self.limits), self.position.z)
+            self.multiplier *= Vector(1, -1, 1)
+       
+        if self.position.z <= min(self.limits):
+            self.position = Vector(self.position.x, self.position.y, min(self.limits))
+            self.multiplier *= Vector(1,1,-1)
+        elif self.position.z >= max(self.limits):
+            self.position = Vector(self.position.x, self.position.y, max(self.limits))
+            self.multiplier *= Vector(1, 1, -1)
 
         self.position += self.multiplier*self.velocity
         self.update_locals()
 
     # Update Velocity based on a force vector
     def update_velocity(self, force:Vector, maxV=100):
-        self.velocity = (self.velocity+force) % maxV
+        self.velocity = (self.velocity+force) 
         self.update_locals()
     
 
 # Calculating the forces between each particle
-def calculate_forces(particles):
+def calculate_forces(particles, attractionConst=.2):
     forceVs={}
     pForces=[Vector(0,0,0)]*len(particles)
+
     for idx, p in enumerate(particles):
-        for idj, j in enumerate(particles[1:]):
+        av=0
+        for idj, j in enumerate(particles):
+            if idx == idj or p.position.dist(j.position)==0:
+                continue
             distance = p.compute_distance_to_point(j.position)**2
-            invSqr = 1/distance if distance else 0
-            #pForces[idx] += Vector(invSqr, invSqr, invSqr)
-            print(distance, invSqr)
-        #pForces[idx]/Vector(idj,idj,idj)
+            invSqr = 1/distance if distance > .5*p.radius else 0
+            dVec=sMult(p.position.norm_direction_to(j.position),invSqr)
+            pForces[idx]+=sMult(dVec, 2 if j.radius == 35 else 1)
+            av+=1
+
+        if av:
+            pForces[idx] /= Vector(av,av,av)
+        
+        
+        print(f"X{idx}={pForces[idx].x}",end='\t')
+        print(f"Y{idx}={pForces[idx].y}",end='\t')
+        print(f"Z{idx}={pForces[idx].z}",end='\n')
 
     return pForces
     
@@ -121,16 +143,16 @@ def animate(value):
     force = calculate_forces(particles)
     for idx, p in enumerate(particles):
         p.update_position()
-        #p.update_velocity(force[idx])
+        p.update_velocity(force[idx])
 
     graph._offsets3d = ([p.x for p in particles], [p.y for p in particles],[p.z for p in particles])
 
 
 colors = ['red', 'blue']
 sizes = [5,35]
-rparticles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
+particles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
 
-particles = [Particle(5, 1), Particle(35,1)]
+rparticles = [Particle(5, 1), Particle(35,1)]
 x = [p.x for p in particles]
 y = [p.y for p in particles]
 z = [p.z for p in particles]
@@ -152,6 +174,6 @@ ax.set_zlabel('Z')
 ax.set_title('Crystal Generation')
 graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=so,c=co)
 
-anim = animation.FuncAnimation(fig, animate, frames=30, interval=30, repeat=True)
+anim = animation.FuncAnimation(fig, animate, frames=30, interval=50, repeat=True)
 plt.show()
 
