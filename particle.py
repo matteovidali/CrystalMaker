@@ -10,7 +10,7 @@ from Vector import Vector
 # Seed is the global random seed value
 SEED = 0 
 NUM_PARTICLES = 2 
-DT = 0.001
+DT = 1
 STEPS = 2000000
 
 #Vector Functions:
@@ -38,9 +38,9 @@ class Particle:
         self.z = self.position.get('z')
 
         self.velocity = Vector(random.uniform(0,.5), random.uniform(0,.5), random.uniform(0,.5))
-        self.limits = (0,10)
+        self.acc = Vector(0,0,0)
 
-        self.multiplier = Vector(1,1,1)
+        self.limits = (-10,10)
 
         if limits:
             self.limits = limits
@@ -65,51 +65,24 @@ class Particle:
         return self.position
 
     # Inaccurate Position updates
-    # Lets fix this reflection scheme at some point
+    # Velocity updates by FORCE :)
     def update_position(self):
-        
-#        testMin= Vector(np.sign(min(self.limits) - self.position.x), 
-#                        np.sign(min(self.limits) - self.position.y), 
-#                        np.sign(min(self.limits) - self.position.z))
-#
-#        testMax= Vector(np.sign(max(self.limits) - self.position.x), 
-#                        np.sign(max(self.limits) - self.position.y), 
-#                        np.sign(max(self.limits) - self.position.z))
-#
-#        #NotQuite
-#        if any([self.position.x, self.position.y, self.position.z]) < min(self.limits):
-#            self.multiplier = testMin
-#        elif any([self.position.x, self.position.y, self.position.z]) < max(self.limits):
-#            self.multiplier = testMax
+        if self.position.x <= min(self.limits) or self.position.x >= max(self.limits):
+            self.velocity *= Vector(-1,1,1)
+        if self.position.y <= min(self.limits) or self.position.y >= max(self.limits):
+            self.velocity *= Vector(1,-1,1)
+        if self.position.z <= min(self.limits) or self.position.z >= max(self.limits):
+            self.velocity *= Vector(1,1,-1)
 
-        if self.position.x <= min(self.limits):
-            self.position = Vector(min(self.limits), self.position.y, self.position.z)
-            self.multiplier *= Vector(-1,1,1)
-        elif self.position.x >= max(self.limits):
-            self.position = Vector(max(self.limits), self.position.y, self.position.z)
-            self.multiplier *= Vector(-1, 1, 1)
-        
-        if self.position.y <= min(self.limits):
-            self.position = Vector(self.position.x, min(self.limits), self.position.z)
-            self.multiplier *= Vector(1,-1,1)
-        elif self.position.y >= max(self.limits):
-            self.position = Vector(self.position.x, max(self.limits), self.position.z)
-            self.multiplier *= Vector(1, -1, 1)
-       
-        if self.position.z <= min(self.limits):
-            self.position = Vector(self.position.x, self.position.y, min(self.limits))
-            self.multiplier *= Vector(1,1,-1)
-        elif self.position.z >= max(self.limits):
-            self.position = Vector(self.position.x, self.position.y, max(self.limits))
-            self.multiplier *= Vector(1, 1, -1)
+        self.position += sMult(self.velocity, DT)
 
-        self.position += self.multiplier*self.velocity
         self.update_locals()
 
     # Update Velocity based on a force vector
     def update_velocity(self, force:Vector, maxV=100):
-        self.velocity = (self.velocity+force) 
-        self.update_locals()
+        self.velocity = sMult(self.velocity+self.acc, DT)
+
+        self.update_locals
     
 
 # Calculating the forces between each particle
@@ -122,7 +95,9 @@ def calculate_forces(particles, attractionConst=.2):
         for idj, j in enumerate(particles):
             if idx == idj or p.position.dist(j.position)==0:
                 continue
-            distance = p.compute_distance_to_point(j.position)**2
+            distance = p.compute_distance_to_point(j.position)
+            if distance < j.radius + p.radius:
+                print("COLLISION")
             invSqr = 1/distance if distance > .5*p.radius else 0
             dVec=sMult(p.position.norm_direction_to(j.position),invSqr)
             pForces[idx]+=sMult(dVec, 2 if j.radius == 35 else 1)
@@ -143,13 +118,13 @@ def animate(value):
     force = calculate_forces(particles)
     for idx, p in enumerate(particles):
         p.update_position()
-        p.update_velocity(force[idx])
+        #p.update_velocity(force[idx])
 
     graph._offsets3d = ([p.x for p in particles], [p.y for p in particles],[p.z for p in particles])
 
 
 colors = ['red', 'blue']
-sizes = [5,35]
+sizes = [20,40]
 particles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
 
 rparticles = [Particle(5, 1), Particle(35,1)]
@@ -160,16 +135,16 @@ z = [p.z for p in particles]
 # size based on particles radius
 so = [p.radius for p in particles]
 # colors based on particles radius
-co = [colors[0] if particles[c].radius==5 else colors[1] for c in range(len(x))]
+co = [colors[0] if particles[c].radius==min(sizes) else colors[1] for c in range(len(x))]
 
 
 fig = plt.figure()
 ax = plt.axes(projection = "3d")
-ax.set_xlim3d([0.0, 10])
+ax.set_xlim3d([-10, 10])
 ax.set_xlabel('X')
-ax.set_ylim3d([0.0,10])
+ax.set_ylim3d([-10,10])
 ax.set_ylabel('Y')
-ax.set_zlim3d([0.0, 10])
+ax.set_zlim3d([-10, 10])
 ax.set_zlabel('Z')
 ax.set_title('Crystal Generation')
 graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=so,c=co)
