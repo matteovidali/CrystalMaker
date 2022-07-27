@@ -22,11 +22,14 @@ class Vector:
     def __mod__(self, num):
         return Vector(self.x%num, self.y%num, self.z%num)
     
+    # Vector Multiplication overloading
     def __mul__(self, other):
         return Vector(self.x*other.x, self.y*other.y, self.z*other.z)
-    
+
+    # Vector Subtraction overloading 
     def __sub__(self, other):
         return Vector(self.x-other.x, self.y-other.y, self.z-other.z)
+    
     # Helper Function (not strictly necessary)
     def get(self, coord):
         if coord=='x':
@@ -41,6 +44,7 @@ class Vector:
     def dist(self, v):
         return sqrt((self.x - v.x)**2 + (self.y - v.y)**2 + (self.z - v.z)**2)
     
+    # Return the normalized direction vector from self to v
     def norm_direction_to(self, v):
         mag = self.dist(v)
         return (self - v)/Vector(mag, mag, mag)
@@ -56,9 +60,11 @@ class Vector:
             self.y %= mod
             self.z %= mod
     
+    # Return Magnitude of self
     def magnitude(self):
         return sqrt(self.x**2 + self.y**2 + self.z**2)
-    
+
+    # return if self.isZero (Null Vector) 
     def isZero(self):
         return True if self.x == self.y == self.z == 0 else False
 

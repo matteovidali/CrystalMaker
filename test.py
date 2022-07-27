@@ -1,45 +1,25 @@
-from tkinter import W
-from matplotlib import pyplot as plt
-import numpy as np
-
-
-import numpy as np
 import matplotlib.pyplot as plt
-import mpl_toolkits.mplot3d.axes3d as p3
-import matplotlib.animation as animation
 
-def make_helix(n):
-    theta_max = 8*np.pi
-    theta = np.linspace(0,theta_max,n)
-    x, y, z = theta, np.sin(theta), np.cos(theta)
-    helix = np.vstack((x,y,z))
+for dpi in [72,100,144]:
 
-    return helix
+    fig,ax = plt.subplots(figsize=(1.5,2), dpi=dpi)
+    ax.set_title("fig.dpi={}".format(dpi))
 
-def update_lines(num, dataLines, lines):
-    for line, data in zip(lines,dataLines):
-        line.set_data(data[0:2, num-1:num])
-        line.set_3d_properties(data[2,num-1:num])
-    return lines
+    ax.set_ylim(-2,2)
+    ax.set_xlim(-2,2)
+    print(fig.get_size_inches()*fig.dpi)
+    spd=fig.get_size_inches()*fig.dpi
+    spd=spd[0]/4
 
-fig = plt.figure()
-ax = p3.Axes3D(fig, auto_add_to_figure=False)
+    ax.scatter([0],[0], s=spd**2, 
+               marker="s", linewidth=0, label="100 points^2")
+    ax.scatter([0],[0], s=10**2, 
+               linewidth=0, label="100 points^2")
+    ax.scatter([1],[0], s=(10*72./fig.dpi)**2, 
+               marker="s", linewidth=0, label="100 pixels^2")
 
-n = 100
-data = [make_helix(n)]
+    ax.legend(loc=8,framealpha=1, fontsize=8)
 
-lines = [ax.plot(data[0][0,0:1], data[0][1,0:1], data[0][2,0:1], 'o')[0]] 
+    #fig.savefig("fig{}.png".format(dpi), bbox_inches="tight")
 
-ax.set_xlim3d([0.0, 8*np.pi])
-ax.set_xlabel('X')
-
-ax.set_ylim3d([-1.0,1.0])
-ax.set_ylabel('Y')
-
-ax.set_zlim3d([-1.0, 1.0])
-ax.set_zlabel('Z')
-
-ax.set_title('3D Test')
-
-#ani = animation.FuncAnimation(fig, update_lines, n, fargs=(data, lines), interval=50, blit=False)
-plt.show()
+plt.show() 

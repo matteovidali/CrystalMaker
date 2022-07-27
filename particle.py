@@ -9,9 +9,10 @@ from Vector import Vector
 
 # Seed is the global random seed value
 SEED = 0 
-NUM_PARTICLES = 2 
+NUM_PARTICLES = 100 
 DT = 1
 STEPS = 2000000
+BOUNDING_SPACE=(-10,10)
 
 #Vector Functions:
 def sMult(v1:Vector, num:float):
@@ -23,7 +24,7 @@ def vComp(v1:Vector, v2:Vector):
 
 # Particle class for a particle simulator ... duh
 class Particle:
-    def __init__(self, radius, polarity, mass=1, maxV=0.05, limits=None):
+    def __init__(self, radius, polarity, mass=1, maxV=0.05, limits=BOUNDING_SPACE,ipos=None):
         global SEED
         random.seed(SEED)
         SEED += random.randint(0,1000)
@@ -32,7 +33,7 @@ class Particle:
         self.polarity=polarity
         self.mass=mass
 
-        self.position = Vector(10,5,5)
+        self.position = ipos if ipos else Vector(10,5,5)
         self.x = self.position.get('x') 
         self.y = self.position.get('y')
         self.z = self.position.get('z')
@@ -96,7 +97,7 @@ def calculate_forces(particles, attractionConst=.2):
             if idx == idj or p.position.dist(j.position)==0:
                 continue
             distance = p.compute_distance_to_point(j.position)
-            invSqr = 1/distance if distance > .5*p.radius else 0
+            invSqr = 1/distance if distance > 1 else 0
             dVec=sMult(p.position.norm_direction_to(j.position),invSqr)
             pForces[idx]+=sMult(dVec, 2 if j.radius == 35 else 1)
             av+=1
@@ -122,10 +123,11 @@ def animate(value):
 
 
 colors = ['red', 'blue']
-sizes = [20,40]
+sizes = [0.5, 1]
 particles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
 
-rparticles = [Particle(5, 1), Particle(35,1)]
+rparticles = [Particle(0.5,1, ipos=Vector(0,-10,-10))]
+
 x = [p.x for p in particles]
 y = [p.y for p in particles]
 z = [p.z for p in particles]
@@ -136,17 +138,29 @@ so = [p.radius for p in particles]
 co = [colors[0] if particles[c].radius==min(sizes) else colors[1] for c in range(len(x))]
 
 
-fig = plt.figure()
-ax = plt.axes(projection = "3d")
-ax.set_xlim3d([-10, 10])
-ax.set_xlabel('X')
-ax.set_ylim3d([-10,10])
-ax.set_ylabel('Y')
-ax.set_zlim3d([-10, 10])
-ax.set_zlabel('Z')
-ax.set_title('Crystal Generation')
-graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=so,c=co)
+NUM_DIV=abs(BOUNDING_SPACE[0]-BOUNDING_SPACE[1])
 
+fig = plt.figure(figsize=(10,10), dpi=72)
+
+size = fig.get_size_inches()*fig.dpi
+sizePerDivision=size[0]/NUM_DIV
+
+
+ax = fig.add_subplot(projection = "3d")
+
+ax.set_xlim3d([BOUNDING_SPACE[0], BOUNDING_SPACE[1]])
+ax.set_xlabel('X')
+ax.set_xticks(np.arange(min(BOUNDING_SPACE), max(BOUNDING_SPACE)+1, max(NUM_DIV/20, 1)))
+
+ax.set_ylim3d([BOUNDING_SPACE[0], BOUNDING_SPACE[1]])
+ax.set_ylabel('Y')
+ax.set_yticks(np.arange(min(BOUNDING_SPACE), max(BOUNDING_SPACE)+1, max(NUM_DIV/20, 1)))
+
+ax.set_zlim3d([BOUNDING_SPACE[0], BOUNDING_SPACE[1]])
+ax.set_zlabel('Z')
+ax.set_zticks(np.arange(min(BOUNDING_SPACE), max(BOUNDING_SPACE)+1, max(NUM_DIV/20, 1)))
+
+ax.set_title('Crystal Generation')
+graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=[((sv*sizePerDivision)**2)*np.pi for sv in so],c=co)
 anim = animation.FuncAnimation(fig, animate, frames=30, interval=50, repeat=True)
 plt.show()
-
