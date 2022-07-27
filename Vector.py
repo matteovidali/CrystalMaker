@@ -68,3 +68,10 @@ class Vector:
     def isZero(self):
         return True if self.x == self.y == self.z == 0 else False
 
+#Vector Functions:
+def sMult(v1:Vector, num:float):
+    return Vector(v1.x*num, v1.y*num, v1.z*num)
+
+def vComp(v1:Vector, v2:Vector):
+    s = v1-v2
+    return True if s.magnitude == 0 else False

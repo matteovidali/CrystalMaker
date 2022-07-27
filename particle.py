@@ -5,7 +5,7 @@ from matplotlib import animation
 from math import sqrt
 import random
 from datetime import datetime
-from Vector import Vector
+from Vector import Vector, sMult, vComp
 
 # Seed is the global random seed value
 SEED = 0 
@@ -14,13 +14,7 @@ DT = 1
 STEPS = 2000000
 BOUNDING_SPACE=(-10,10)
 
-#Vector Functions:
-def sMult(v1:Vector, num:float):
-    return Vector(v1.x*num, v1.y*num, v1.z*num)
 
-def vComp(v1:Vector, v2:Vector):
-    s = v1-v2
-    return True if s.magnitude == 0 else False
 
 # Particle class for a particle simulator ... duh
 class Particle:
