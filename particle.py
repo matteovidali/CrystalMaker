@@ -9,7 +9,7 @@ from Vector import Vector
 
 # Seed is the global random seed value
 SEED = 0 
-NUM_PARTICLES = 100 
+NUM_PARTICLES = 2 
 DT = 1
 STEPS = 2000000
 BOUNDING_SPACE=(-10,10)
@@ -31,7 +31,7 @@ class Particle:
         SEED %= 999999999999
         self.radius = radius
         self.polarity=polarity
-        self.mass=mass
+        self.mass=mass*radius
 
         self.position = ipos if ipos else Vector(10,5,5)
         self.x = self.position.get('x') 
@@ -97,7 +97,11 @@ def calculate_forces(particles, attractionConst=.2):
             if idx == idj or p.position.dist(j.position)==0:
                 continue
             distance = p.compute_distance_to_point(j.position)
-            invSqr = 1/distance if distance > 1 else 0
+
+            if distance < p.radius+j.radius:
+                print("COLLISION")
+
+            invSqr = 1/distance if distance != 0 else 0
             dVec=sMult(p.position.norm_direction_to(j.position),invSqr)
             pForces[idx]+=sMult(dVec, 2 if j.radius == 35 else 1)
             av+=1
@@ -106,9 +110,9 @@ def calculate_forces(particles, attractionConst=.2):
             pForces[idx] /= Vector(av,av,av)
         
         
-        print(f"X{idx}={pForces[idx].x}",end='\t')
-        print(f"Y{idx}={pForces[idx].y}",end='\t')
-        print(f"Z{idx}={pForces[idx].z}",end='\n')
+#        print(f"X{idx}={pForces[idx].x}",end='\t')
+#        print(f"Y{idx}={pForces[idx].y}",end='\t')
+#        print(f"Z{idx}={pForces[idx].z}",end='\n')
 
     return pForces
     
