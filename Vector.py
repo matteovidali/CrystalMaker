@@ -69,8 +69,11 @@ class Vector:
         return True if self.x == self.y == self.z == 0 else False
 
 #Vector Functions:
-def sMult(v1:Vector, num:float):
-    return Vector(v1.x*num, v1.y*num, v1.z*num)
+def sMult(v:Vector, num:float):
+    return Vector(v.x*num, v.y*num, v.z*num)
+
+def sDiv(v:Vector, num:float):
+    return Vector(v.x/num, v.y/num, v.z*num)
 
 def vComp(v1:Vector, v2:Vector):
     s = v1-v2

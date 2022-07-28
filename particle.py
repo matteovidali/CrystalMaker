@@ -19,8 +19,9 @@ class Particle:
         self.y = self.position.get('y')
         self.z = self.position.get('z')
 
-        self.velocity = Vector(random.uniform(0,.5), random.uniform(0,.5), random.uniform(0,.5))
-        self.acc = Vector(0,0,0)
+        #self.velocity = Vector(random.uniform(0,.5), random.uniform(0,.5), random.uniform(0,.5))
+        self.velocity = Vector(0,0,0)
+        self.force = Vector(0,0,0)
 
         self.limits = (-10,10)
 
@@ -62,6 +63,7 @@ class Particle:
 
     # Update Velocity based on a force vector
     def update_velocity(self, force:Vector, maxV=100):
-        self.velocity = sMult(self.velocity+self.acc, DT)
+        a = force/ Vector(self.mass,self.mass,self.mass)
+        self.velocity += sMult(a, DT)
 
         self.update_locals
