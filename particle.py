@@ -5,7 +5,7 @@ SEED = 0
 DT = 1
 
 class Particle:
-    def __init__(self, radius, polarity, mass=1, maxV=0.05, limits=(-10,10),ipos=None):
+    def __init__(self, radius, polarity, mass=1, maxV=0.05, limits=(-10,10),ipos=None, fixed=False):
         global SEED
         random.seed(SEED)
         SEED += random.randint(0,1000)
@@ -15,18 +15,19 @@ class Particle:
         self.mass=mass*radius
 
         self.position = ipos if ipos else Vector(10,5,5)
-        self.x = self.position.get('x') 
-        self.y = self.position.get('y')
-        self.z = self.position.get('z')
+
+        self.x = self.position.x
+        self.y = self.position.y
+        self.z = self.position.z
 
         #self.velocity = Vector(random.uniform(0,.5), random.uniform(0,.5), random.uniform(0,.5))
         self.velocity = Vector(0,0,0)
         self.force = Vector(0,0,0)
 
         self.limits = (-10,10)
-
         if limits:
             self.limits = limits
+        self.fixed=fixed
         
 
     # Helper function so that I have simpler locals I am lazy
@@ -50,6 +51,8 @@ class Particle:
     # Inaccurate Position updates
     # Velocity updates by FORCE :)
     def update_position(self):
+        if self.fixed:
+            return
         if self.position.x <= min(self.limits) or self.position.x >= max(self.limits):
             self.velocity *= Vector(-1,1,1)
         if self.position.y <= min(self.limits) or self.position.y >= max(self.limits):

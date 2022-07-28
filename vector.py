@@ -75,3 +75,6 @@ def sMult(v1:Vector, num:float):
 def vComp(v1:Vector, v2:Vector):
     s = v1-v2
     return True if s.magnitude == 0 else False
+
+def dot(v1:Vector,v2:Vector):
+    return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z

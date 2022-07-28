@@ -5,7 +5,7 @@ from matplotlib import animation
 from math import sqrt
 import random
 from datetime import datetime
-from vector import Vector, sMult, vComp
+from vector import *
 from particle import Particle
 
 # Seed is the global random seed value
@@ -27,36 +27,50 @@ def calculate_forces(particles, attractionConst=.2):
     for idx, p in enumerate(particles[:-1]):
         av=0
         for idj, j in enumerate(particles[idx+1:]):
+            CForce_pj = Vector(0,0,0)
+            CForce_jp = Vector(0,0,0)
             # checkif j==p (ditance will be zero or index positino will be same)
             if p.position.dist(j.position)==0:
                 continue
             
             #calculate distance to point
             distance = p.compute_distance_to_point(j.position)
-            direction_pj = p.position.norm_direction_to(j.position)
-            direction_jp = sMult(direction_pj, -1)
+            direction_jp = p.position.norm_direction_to(j.position)
+            direction_pj = sMult(direction_jp, -1)
 
 
             #is distance too small? collision
-            if distance < p.radius+j.radius:
-                print("COLLISION")
-        
+               
             # Gravitational Attraction scalar
             # F_jp is the force exerted upon j by p
-            F_jp = sMult(direction_jp, -G * (p.mass * j.mass) / (distance**2))
+            F_jp = sMult(direction_jp, G * (p.mass * j.mass) / (distance**2))
             # F_pj is the force exerted upon p by j
             F_pj = sMult(F_jp, -1)
 
+            if distance < p.radius+j.radius:
+                dr = p.position - j.position
+                dv = p.velocity - j.velocity
+                drDotDv = dot(dr, dv)
+                p.velocity -= drDotDv/ ((distance**2)*(dr))
+                j.velocity -= drDotDv/ ((distance**2)*(-dr))
 
+                overlap = p.radius+j.radius-distance
+                pushOnj = sMult(direction_pj, -overlap/2)
+                pushOnp = sMult(pushOnj, -1)
+
+                #CForce_pj = sMult(direction_pj,F_pj.magnitude())
+                #CForce_jp = sMult(direction_jp, F_jp.magnitude())
+                print(overlap)
+                print("COLLISION")
+                continue
 
             pForces[idx]+=F_pj
-            pForces[idj+1]+=F_jp
+            pForces[idx+(idj+1)]+=F_jp
 
-            if idj+1 == idx+1:
+            if idx == len(pForces)-2:
                 j.force = pForces[idj+1]
+
         p.force = pForces[idx]
-        if av:
-            pForces[idx] /= Vector(av,av,av)
 
         print(f"Distance: {distance}")
 
@@ -81,8 +95,10 @@ if __name__ == "__main__":
     colors = ['red', 'blue']
     sizes = [0.5, 1]
     rparticles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
+    sparticles = [Particle(0.5,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,0,0)), Particle(0.5,1,ipos=Vector(-9,0,0)),
+                 Particle(0.5,1, ipos=Vector(0,9,0))]
+    particles = [Particle(0.5,1,ipos=Vector(0,0,0), fixed=True), Particle(0.5,1,ipos=Vector(9,6,0))]
 
-    particles = [Particle(0.5,1, ipos=Vector(9,0,0)), Particle(0.5,1,ipos=Vector(-9,0,0))]
 
     x = [p.x for p in particles]
     y = [p.y for p in particles]
@@ -116,7 +132,7 @@ if __name__ == "__main__":
     ax.set_zlabel('Z')
     ax.set_zticks(np.arange(min(BOUNDING_SPACE), max(BOUNDING_SPACE)+1, max(NUM_DIV/20, 1)))
 
-    ax.set_title('Crystal Generation')
+    ax.set_title('Crystal Generation') 
     graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=[((sv*sizePerDivision)**2)*np.pi for sv in so],c=co)
     anim = animation.FuncAnimation(fig, animate, frames=30, interval=50, repeat=True)
     plt.show()
