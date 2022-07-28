@@ -5,7 +5,7 @@ SEED = 0
 DT = 1
 
 class Particle:
-    def __init__(self, radius, polarity, mass=1, maxV=0.05, limits=(-10,10),ipos=None, fixed=False):
+    def __init__(self, radius, polarity, mass=2, maxV=0.05, limits=(-10,10),ipos=None, fixed=False):
         global SEED
         random.seed(SEED)
         SEED += random.randint(0,1000)
@@ -65,7 +65,7 @@ class Particle:
         self.update_locals()
 
     # Update Velocity based on a force vector
-    def update_velocity(self, force:Vector, maxV=100):
+    def update_velocity(self, force:Vector):
         a = force/ Vector(self.mass,self.mass,self.mass)
         self.velocity += sMult(a, DT)
 

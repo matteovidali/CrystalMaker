@@ -7,18 +7,13 @@ import random
 from datetime import datetime
 from vector import *
 from particle import Particle
-
 # Seed is the global random seed value
 NUM_PARTICLES = 2 
 STEPS = 2000000
 BOUNDING_SPACE=(-10,10)
 # attractive coefficient:
-G=1
+G=.1
 
-
-# Particle class for a particle simulator ... duh
-
-    
 
 # Calculating the forces between each particle
 def calculate_forces(particles, attractionConst=.2):
@@ -27,8 +22,6 @@ def calculate_forces(particles, attractionConst=.2):
     for idx, p in enumerate(particles[:-1]):
         av=0
         for idj, j in enumerate(particles[idx+1:]):
-            CForce_pj = Vector(0,0,0)
-            CForce_jp = Vector(0,0,0)
             # checkif j==p (ditance will be zero or index positino will be same)
             if p.position.dist(j.position)==0:
                 continue
@@ -47,21 +40,19 @@ def calculate_forces(particles, attractionConst=.2):
             # F_pj is the force exerted upon p by j
             F_pj = sMult(F_jp, -1)
 
-            if distance < p.radius+j.radius:
-                dr = p.position - j.position
-                dv = p.velocity - j.velocity
-                drDotDv = dot(dr, dv)
-                p.velocity -= drDotDv/ ((distance**2)*(dr))
-                j.velocity -= drDotDv/ ((distance**2)*(-dr))
+            if distance <= p.radius+j.radius:
+                print("Collide")
+                # Calculate Reaction Forces!
+                # if colliding component of force pointing to other particle
+                # is exactly reflected.
+                #RF_pj is the reaction force from j applied to p
+                # It is calculated to be the component of F_pj along 
+                # the vector pointing from j to p
+                j.velocity += sMult(direction_pj, dot(j.velocity, F_jp)/F_jp.magnitude())
+                p.velocity += sMult(direction_jp,dot(p.velocity, F_pj)/F_pj.magnitude())
 
-                overlap = p.radius+j.radius-distance
-                pushOnj = sMult(direction_pj, -overlap/2)
-                pushOnp = sMult(pushOnj, -1)
-
-                #CForce_pj = sMult(direction_pj,F_pj.magnitude())
-                #CForce_jp = sMult(direction_jp, F_jp.magnitude())
-                print(overlap)
-                print("COLLISION")
+                F_pj = sMult(F_pj,-1) 
+                F_jp = sMult(F_jp,-1)
                 continue
 
             pForces[idx]+=F_pj
@@ -72,7 +63,7 @@ def calculate_forces(particles, attractionConst=.2):
 
         p.force = pForces[idx]
 
-        print(f"Distance: {distance}")
+        print(f"V: {p.velocity.magnitude()}")
 
         
     
@@ -95,9 +86,9 @@ if __name__ == "__main__":
     colors = ['red', 'blue']
     sizes = [0.5, 1]
     rparticles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
-    sparticles = [Particle(0.5,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,0,0)), Particle(0.5,1,ipos=Vector(-9,0,0)),
-                 Particle(0.5,1, ipos=Vector(0,9,0))]
-    particles = [Particle(0.5,1,ipos=Vector(0,0,0), fixed=True), Particle(0.5,1,ipos=Vector(9,6,0))]
+    particles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,3,-1)), Particle(0.5,1,ipos=Vector(-9,0,0)),
+                 Particle(0.5,1, ipos=Vector(0,9,1))]
+    rparticles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True), Particle(0.5,1,ipos=Vector(9,6,1))]
 
 
     x = [p.x for p in particles]
