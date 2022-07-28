@@ -1,3 +1,4 @@
+from inspect import BoundArguments
 from mpl_toolkits import mplot3d
 import numpy as np
 import matplotlib.pyplot as plt
@@ -40,7 +41,7 @@ def calculate_forces(particles, attractionConst=.2):
             # F_pj is the force exerted upon p by j
             F_pj = sMult(F_jp, -1)
 
-            if distance <= p.radius+j.radius:
+            if distance < p.radius+j.radius:
                 print("Collide")
                 # Calculate Reaction Forces!
                 # if colliding component of force pointing to other particle
@@ -84,9 +85,15 @@ def animate(value):
 
 if __name__ == "__main__":
     colors = ['red', 'blue']
-    sizes = [0.5, 1]
-    rparticles = [Particle(random.choice(sizes),1) for _ in range(0,NUM_PARTICLES)]
-    particles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,3,-1)), Particle(0.5,1,ipos=Vector(-9,0,0)),
+    sizes = [0.5,0.5,1]
+
+    particles = [Particle(0.5,1, 
+                ipos=Vector(random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1), 
+                            random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1),
+                            random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1))) for _ in range(0,NUM_PARTICLES)]
+    particles.append(Particle(1,1,ipos=Vector(0,0,0),mass=5, fixed=True))
+
+    sparticles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,3,-1)), Particle(0.5,1,ipos=Vector(-9,0,0)),
                  Particle(0.5,1, ipos=Vector(0,9,1))]
     rparticles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True), Particle(0.5,1,ipos=Vector(9,6,1))]
 

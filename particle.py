@@ -12,7 +12,7 @@ class Particle:
         SEED %= 999999999999
         self.radius = radius
         self.polarity=polarity
-        self.mass=mass*radius
+        self.mass=mass
 
         self.position = ipos if ipos else Vector(10,5,5)
 
