@@ -2,17 +2,17 @@ from vector import *
 import random
 
 SEED = 0 
-DT = 1
+DT = 0.01
 
 class Particle:
-    def __init__(self, radius, polarity, mass=2, maxV=0.05, limits=(-10,10),ipos=None, fixed=False):
+    def __init__(self, radius, polarity, mass=2, maxV=0.05, limits=(-50,50),ipos=None, fixed=False):
         global SEED
         random.seed(SEED)
         SEED += random.randint(0,1000)
         SEED %= 999999999999
         self.radius = radius
         self.polarity=polarity
-        self.mass=mass
+        self.mass=mass*radius
 
         self.position = ipos if ipos else Vector(10,5,5)
 

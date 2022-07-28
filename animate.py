@@ -7,15 +7,15 @@ from math import sqrt
 import random
 from datetime import datetime
 from vector import *
-from particle import Particle
+from particle import *
 # Seed is the global random seed value
-NUM_PARTICLES = 2 
+NUM_PARTICLES = 20 
 STEPS = 2000000
-BOUNDING_SPACE=(-10,10)
+BOUNDING_SPACE=(-50,50)
 # attractive coefficient:
 G=.1
-
-
+# Ratio of real time to artificial time
+S_SPEED=4
 # Calculating the forces between each particle
 def calculate_forces(particles, attractionConst=.2):
     forceVs={}
@@ -41,8 +41,7 @@ def calculate_forces(particles, attractionConst=.2):
             # F_pj is the force exerted upon p by j
             F_pj = sMult(F_jp, -1)
 
-            if distance < p.radius+j.radius:
-                print("Collide")
+            if distance <= p.radius+j.radius:
                 # Calculate Reaction Forces!
                 # if colliding component of force pointing to other particle
                 # is exactly reflected.
@@ -51,10 +50,15 @@ def calculate_forces(particles, attractionConst=.2):
                 # the vector pointing from j to p
                 j.velocity += sMult(direction_pj, dot(j.velocity, F_jp)/F_jp.magnitude())
                 p.velocity += sMult(direction_jp,dot(p.velocity, F_pj)/F_pj.magnitude())
-
+                if distance < p.radius + j.radius:
+                    overlap = (p.radius + j.radius) - distance
+                    p.position -= sMult(j.position.norm_direction_to(p.position), overlap/2)
+                    j.position -= sMult(p.position.norm_direction_to(j.position), overlap/2)
+                
                 F_pj = sMult(F_pj,-1) 
                 F_jp = sMult(F_jp,-1)
                 continue
+
 
             pForces[idx]+=F_pj
             pForces[idx+(idj+1)]+=F_jp
@@ -64,7 +68,6 @@ def calculate_forces(particles, attractionConst=.2):
 
         p.force = pForces[idx]
 
-        print(f"V: {p.velocity.magnitude()}")
 
         
     
@@ -76,22 +79,23 @@ def calculate_forces(particles, attractionConst=.2):
     
 # This is my cursed draw loop atm...
 def animate(value):
-    force = calculate_forces(particles)
-    for idx, p in enumerate(particles):
-        p.update_position()
-        p.update_velocity(force[idx])
+    for i in range(0, 2**S_SPEED):
+        force = calculate_forces(particles)
+        for idx, p in enumerate(particles):
+            p.update_position()
+            p.update_velocity(force[idx])
 
     graph._offsets3d = ([p.x for p in particles], [p.y for p in particles],[p.z for p in particles])
 
 if __name__ == "__main__":
     colors = ['red', 'blue']
-    sizes = [0.5,0.5,1]
+    sizes = [0.5,1]
 
-    particles = [Particle(0.5,1, 
+    particles = [Particle(random.choice(sizes),1, 
                 ipos=Vector(random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1), 
                             random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1),
-                            random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1))) for _ in range(0,NUM_PARTICLES)]
-    particles.append(Particle(1,1,ipos=Vector(0,0,0),mass=5, fixed=True))
+                            random.randint(BOUNDING_SPACE[0]+1, BOUNDING_SPACE[1]-1)),mass=20) for _ in range(0,NUM_PARTICLES)]
+    particles.append(Particle(1,1,ipos=Vector(0,0,0),mass=20, fixed=True))
 
     sparticles = [Particle(1,1,ipos=Vector(0,0,0), fixed=True),Particle(0.5,1, ipos=Vector(9,3,-1)), Particle(0.5,1,ipos=Vector(-9,0,0)),
                  Particle(0.5,1, ipos=Vector(0,9,1))]
@@ -132,5 +136,6 @@ if __name__ == "__main__":
 
     ax.set_title('Crystal Generation') 
     graph = ax.scatter([p.x for p in particles], [p.y for p in particles] ,[p.z for p in particles], s=[((sv*sizePerDivision)**2)*np.pi for sv in so],c=co)
-    anim = animation.FuncAnimation(fig, animate, frames=30, interval=50, repeat=True)
+
+    anim = animation.FuncAnimation(fig, animate, frames=30, interval=1, repeat=True)
     plt.show()
